@@ -1,16 +1,21 @@
 package com.example.jsonreader;
 
+import static java.nio.charset.Charset.defaultCharset;
+import static lombok.AccessLevel.PRIVATE;
+
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.Map;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.AutoCloseInputStream;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.input.AutoCloseInputStream;
-
-import java.io.InputStream;
-import java.util.Arrays;
-
-import static java.nio.charset.Charset.defaultCharset;
-import static lombok.AccessLevel.PRIVATE;
 
 @NoArgsConstructor(access = PRIVATE)
 public class JsonUtil {
@@ -26,8 +31,18 @@ public class JsonUtil {
         return String.format(loadFromFile(resource), Arrays.stream(args).map(JsonUtil::toJson).toArray());
     }
 
-    @SneakyThrows
-    public static <T> String toJson(final T t) {
-        return MAPPER.writeValueAsString(t);
-    }
+	public static String loadFromTemplateFile(String resource, Map<String, Object> values) {
+		VelocityEngine engine = new VelocityEngine();
+		VelocityContext context = new VelocityContext();
+		values.keySet().forEach(key -> context.put(key, values.get(key)));
+		StringWriter sw = new StringWriter();
+		engine.getTemplate(resource).merge(context, sw);
+		//System.out.println(sw.toString());
+		return sw.toString();
+	}
+
+	@SneakyThrows
+	public static <T> String toJson(final T t) {
+		return MAPPER.writeValueAsString(t);
+	}
 }
